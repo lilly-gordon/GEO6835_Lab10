@@ -9,8 +9,7 @@ st.title("CRC NAIP 2011 NDVI Viewer (Leafmap Version)")
 # ---------------------------------------------------
 # 1) Load NDVI TIFF (relative path is cloud safe)
 # ---------------------------------------------------
-tif_path = r"C:\Users\lilli\OneDrive - USU\Desktop\GEO6835\GEOG6835\Week10\Streamlit\data\CRC_NAIP_2011_NDVI.tif"
-
+tif_path = "data/CRC_NAIP_2011_NDVI.tif"
 
 img = Image.open(tif_path)
 ndvi = np.array(img)
