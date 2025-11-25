@@ -1,11 +1,10 @@
 streamlit
 leafmap
 xarray
-rasterio
+rasterio==1.3.9
 numpy
 pillow
 matplotlib
 folium
 branca
 xyzservices
-

@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
 import leafmap.foliumap as leafmap
@@ -11,8 +11,8 @@ st.title("CRC NAIP 2011 NDVI Viewer (Leafmap Version)")
 # ---------------------------------------------------
 tif_path = "data/CRC_NAIP_2011_NDVI.tif"
 
-img = Image.open(tif_path)
-ndvi = np.array(img)
+with rasterio.open(tif_path) as src:
+    ndvi = src.read(1)
 
 # ---------------------------------------------------
 # 2) Geospatial Bounds
