@@ -2,33 +2,31 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-from streamlit_folium import st_folium
-import folium
+import leafmap.foliumap as leafmap
 
-st.title("CRC NAIP 2011 NDVI Viewer")
+st.title("CRC NAIP 2011 NDVI Viewer (Leafmap Version)")
 
 # ---------------------------------------------------
-# 1) Load NDVI TIFF using PIL (Safe on Streamlit Cloud)
+# 1) Load NDVI TIFF (relative path is cloud safe)
 # ---------------------------------------------------
-tif_path = "data/CRC_NAIP_2011_NDVI.tif"
+tif_path = r"C:\Users\lilli\OneDrive - USU\Desktop\GEO6835\GEOG6835\Week10\Streamlit\data\CRC_NAIP_2011_NDVI.tif"
+
 
 img = Image.open(tif_path)
-ndvi = np.array(img)  # REAL NDVI values (-1 to 1)
+ndvi = np.array(img)
 
 # ---------------------------------------------------
-# 2) Geospatial Bounds (manually inserted)
+# 2) Geospatial Bounds
 # ---------------------------------------------------
 left  = -109.639353
 right = -109.628493
 bottom = 38.262410
 top    = 38.268114
 
-# Map center
-center_lat = (top + bottom) / 2
-center_lon = (left + right) / 2
+bounds = [[bottom, left], [top, right]]
 
 # ---------------------------------------------------
-# 3) NDVI Breaks + Colors (GEE style)
+# 3) NDVI Breaks + Colors
 # ---------------------------------------------------
 ndvi_breaks = [-1.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0]
 
@@ -45,68 +43,49 @@ ndvi_colors = [
     '#012E01'
 ]
 
-def ndvi_colormap(val):
-    """Map NDVI value to RGBA tuple."""
-    if np.isnan(val):
-        return (0, 0, 0, 0)
-    for i in range(len(ndvi_breaks) - 1):
-        if ndvi_breaks[i] <= val < ndvi_breaks[i + 1]:
-            hex_color = ndvi_colors[i]
-            r = int(hex_color[1:3], 16) / 255
-            g = int(hex_color[3:5], 16) / 255
-            b = int(hex_color[5:7], 16) / 255
-            return (r, g, b, 1)
-    return (0, 0, 0, 1)
+# ---------------------------------------------------
+# 4) Build Leafmap map
+# ---------------------------------------------------
+m = leafmap.Map(center=((top+bottom)/2, (left+right)/2), zoom=15)
+
+# Add NDVI using the built-in leafmap.add_raster()
+m.add_raster(
+    tif_path,
+    colormap=ndvi_colors,
+    vmin=-1,
+    vmax=1,
+    layer_name="NDVI"
+)
 
 # ---------------------------------------------------
-# 4) Folium map
+# 5) Add Legend
 # ---------------------------------------------------
-m = folium.Map(location=[center_lat, center_lon], zoom_start=15)
+legend_dict = {
+    "No vegetation (≤ 0.0)": "#FFFFFF",
+    "0.0 – 0.1": "#CE7E45",
+    "0.1 – 0.2": "#FCD163",
+    "0.2 – 0.3": "#99B718",
+    "0.3 – 0.4": "#66A000",
+    "0.4 – 0.5": "#207401",
+    "0.5 – 0.6": "#056201",
+    "0.6 – 0.7": "#004C00",
+    "0.7 – 0.8": "#023B01",
+    "0.8 – 1.0": "#012E01",
+}
 
-folium.raster_layers.ImageOverlay(
-    image=ndvi,
-    bounds=[[bottom, left], [top, right]],
-    colormap=ndvi_colormap,
-    opacity=0.8
-).add_to(m)
-
-# ---------------------------------------------------
-# 5) Legend
-# ---------------------------------------------------
-legend_html = """
- <div style="
- position: fixed; 
- bottom: 50px; left: 50px; width: 180px; height: 280px; 
- background-color: white; 
- border:2px solid grey; z-index:9999; 
- font-size:14px; padding: 10px;">
- <b>NDVI Legend</b><br>
- <i style="background:#FFFFFF;width:18px;height:18px;float:left;margin-right:8px;"></i>No vegetation (≤ 0.0)<br>
- <i style="background:#CE7E45;width:18px;height:18px;float:left;margin-right:8px;"></i>0.0 – 0.1<br>
- <i style="background:#FCD163;width:18px;height:18px;float:left;margin-right:8px;"></i>0.1 – 0.2<br>
- <i style="background:#99B718;width:18px;height:18px;float:left;margin-right:8px;"></i>0.2 – 0.3<br>
- <i style="background:#66A000;width:18px;height:18px;float:left;margin-right:8px;"></i>0.3 – 0.4<br>
- <i style="background:#207401;width:18px;height:18px;float:left;margin-right:8px;"></i>0.4 – 0.5<br>
- <i style="background:#056201;width:18px;height:18px;float:left;margin-right:8px;"></i>0.5 – 0.6<br>
- <i style="background:#004C00;width:18px;height:18px;float:left;margin-right:8px;"></i>0.6 – 0.7<br>
- <i style="background:#023B01;width:18px;height:18px;float:left;margin-right:8px;"></i>0.7 – 0.8<br>
- <i style="background:#012E01;width:18px;height:18px;float:left;margin-right:8px;"></i>0.8 – 1.0<br>
- </div>
-"""
-m.get_root().html.add_child(folium.Element(legend_html))
+m.add_legend(title="NDVI", legend_dict=legend_dict)
 
 # ---------------------------------------------------
-# 6) Display Map
+# 6) Display in Streamlit
 # ---------------------------------------------------
-st.subheader("NDVI Map")
-st_folium(m, width=700, height=500)
+m.to_streamlit(height=500)
 
 # ---------------------------------------------------
 # 7) NDVI Histogram
 # ---------------------------------------------------
 st.subheader("NDVI Histogram")
 fig, ax = plt.subplots()
-ax.hist(ndvi[np.isfinite(ndvi)], bins=50, color="green")
+ax.hist(ndvi[np.isfinite(ndvi)], bins=50)
 ax.set_xlabel("NDVI")
 ax.set_ylabel("Pixel Count")
 st.pyplot(fig)

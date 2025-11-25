@@ -1,6 +1,11 @@
 streamlit
-streamlit-folium
-folium
+leafmap
+xarray
+rasterio
 numpy
 pillow
 matplotlib
+folium
+branca
+xyzservices
+
