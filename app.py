@@ -47,14 +47,15 @@ ndvi_colors = [
 # ---------------------------------------------------
 m = leafmap.Map(center=((top+bottom)/2, (left+right)/2), zoom=15)
 
-# Add NDVI using the built-in leafmap.add_raster()
-m.add_raster(
-    tif_path,
+# Add NDVI
+m.add_image(
+    ndvi, 
+    bounds=[[bottom, left], [top, right]],
     colormap=ndvi_colors,
-    vmin=-1,
-    vmax=1,
+    opacity=0.8,
     layer_name="NDVI"
 )
+
 
 # ---------------------------------------------------
 # 5) Add Legend
