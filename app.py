@@ -12,7 +12,11 @@ st.title("CRC NAIP 2011 NDVI Viewer (Leafmap Version)")
 tif_path = "data/CRC_NAIP_2011_NDVI.tif"
 
 with rasterio.open(tif_path) as src:
-    ndvi = src.read(1)
+    ndvi = src.read(1)          # correct: (H, W)
+    ndvi = np.squeeze(ndvi)     # extra safety
+    ndvi = ndvi.astype("float32")
+
+st.write("NDVI shape:", ndvi.shape, "NDVI dtype:", ndvi.dtype)
 
 # ---------------------------------------------------
 # 2) Geospatial Bounds
