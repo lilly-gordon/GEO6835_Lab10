@@ -1,5 +1,5 @@
 import streamlit as st
-import rasterio
+from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import leafmap.foliumap as leafmap
@@ -9,14 +9,11 @@ st.title("CRC NAIP 2011 NDVI Viewer (Leafmap Version)")
 # ---------------------------------------------------
 # 1) Load NDVI TIFF (relative path is cloud safe)
 # ---------------------------------------------------
-tif_path = "data/CRC_NAIP_2011_NDVI.tif"
+tif_path = r"C:\Users\lilli\OneDrive - USU\Desktop\GEO6835\GEOG6835\Week10\Streamlit\data\CRC_NAIP_2011_NDVI.tif"
 
-with rasterio.open(tif_path) as src:
-    ndvi = src.read(1)          # correct: (H, W)
-    ndvi = np.squeeze(ndvi)     # extra safety
-    ndvi = ndvi.astype("float32")
 
-st.write("NDVI shape:", ndvi.shape, "NDVI dtype:", ndvi.dtype)
+img = Image.open(tif_path)
+ndvi = np.array(img)
 
 # ---------------------------------------------------
 # 2) Geospatial Bounds
@@ -51,15 +48,14 @@ ndvi_colors = [
 # ---------------------------------------------------
 m = leafmap.Map(center=((top+bottom)/2, (left+right)/2), zoom=15)
 
-# Add NDVI
-m.add_image(
-    ndvi, 
-    bounds=[[bottom, left], [top, right]],
+# Add NDVI using the built-in leafmap.add_raster()
+m.add_raster(
+    tif_path,
     colormap=ndvi_colors,
-    opacity=0.8,
+    vmin=-1,
+    vmax=1,
     layer_name="NDVI"
 )
-
 
 # ---------------------------------------------------
 # 5) Add Legend
